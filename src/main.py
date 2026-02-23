@@ -1,11 +1,19 @@
-from src.utils import load_words
+import random
+from src.utils import load_words, parse_args
 from src.engine import get_best_outcome
 
-def main():
-    word_pool = load_words("data/solutions.txt")
-    valid_words = set(load_words("data/allowed.txt"))
+
+def run_game(mode):
     
-    valid_words.update(word_pool)
+    if mode == "impossible":
+        word_pool = load_words("data/allowed.txt")
+    else:
+        word_pool = load_words("data/solutions.txt")
+    
+    valid_guesses = set(load_words("data/allowed.txt"))
+    valid_guesses.update(word_pool)
+    
+    secret_word = random.choice(word_pool) if mode == "easy" else None
     
     turns = 0
     max_turns = 6
@@ -19,7 +27,7 @@ def main():
             print(word_pool)
             continue
         
-        if guess not in valid_words:
+        if guess not in valid_guesses:
             print("Not a valid word!")
             continue
         
@@ -37,6 +45,19 @@ def main():
         final_answer = random.choice(word_pool)
         print(f"\nGame over. You ran out of turns.")
         print(f"The word I 'totally' had in mind was: {final_answer}")
+
+def main():
+    args = parse_args()
+    mode = args.mode
+    
+    if not mode:
+        print("--- WELCOME TO EVIL WORDLE ---")
+        print("1. Easy (Static Word)")
+        print("2. Normal (Evil)")
+        print("3. Impossible (Max pain)")
+        choice = input("Select difficulty (1-3): ").strip()
+    
+    run_game(mode)
         
 
 if __name__ == "__main__":
