@@ -1,63 +1,132 @@
-import random
-from src.utils import load_words, parse_args
-from src.engine import get_best_outcome
+import sys
+import argparse
+from dataclasses import dataclass
+from data_manager import load_words
+from logic import match_pattern, get_evil_outcome, is_hard_mode_compliant, get_updated_keyboard
+from utils import clear_screen
+from ui import print_board, print_result
 
 
-def run_game(mode):
+def parse_args():
+    parser = argparse.ArgumentParser(description="Evil Wordle")
     
-    if mode == "impossible":
-        word_pool = load_words("data/allowed.txt")
-    else:
-        word_pool = load_words("data/solutions.txt")
+    parser.add_argument(
+        "-l", "--length",
+        type=int,
+        default=5,
+        choices=[5, 6, 7],
+        help="Number of letters in the word (default: 5)"
+    )
     
-    valid_guesses = set(load_words("data/allowed.txt"))
-    valid_guesses.update(word_pool)
+    parser.add_argument(
+        "-m", "--mode",
+        type=str,
+        default="normal",
+        choices=["normal", "evil", "impossible"],
+        help="Game difficulty (default: normal)"
+    )
     
-    secret_word = random.choice(word_pool) if mode == "easy" else None
+    parser.add_argument(
+        "-d", "--difficulty",
+        type=str,
+        default="normal",
+        choices=["normal", "hard"],
+        help="Game rules (default: normal)"
+    )
     
-    turns = 0
-    max_turns = 6
+    parser.add_argument(
+        "-g", "--guesses",
+        type=int,
+        default=6,
+        choices=[i for i in range(1, 100)],
+        help="Number of guesses 1-100 (default: 6)"
+    )
     
-    print("Welcome to Just Wordle\n This is just a normal wordlelike with nothing evil going on.")
-    print(f"I'm thinking of one of {len(word_pool)} words...")
+    return parser.parse_args()
+
+@dataclass
+class GameSettings:
+    length: int
+    mode: str
+    difficulty: int
+    guesses: int
     
-    while turns < max_turns:
-        guess = input(f"\nTurn {turns + 1} - Enter guess: ").strip().upper()
-        if guess == "!HINT":
-            print(word_pool)
+
+def run_game(settings):
+    
+    word_pool = load_words(settings.length)
+    if not word_pool:
+        print("Could not load words. Check your data folder.")
+        return
+    
+    secret_word = None
+    if settings.mode == "normal":
+        import random
+        secret_word = random.choice(word_pool)
+        
+    guesses = []
+    won = False
+    max_turns = settings.guesses
+    keyboard = {l: 0 for l in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"}
+    status_msg = "" # To hold error messages between refreshes
+    
+    while len(guesses) < max_turns:
+        print_board(guesses, settings, keyboard, status_msg)
+        status_msg = "" # Reset message after displaying
+        
+        turn_num = len(guesses) + 1
+        guess = input(f"Guess {turn_num}/{max_turns}: ").strip().upper()
+        
+        if guess == "!QUIT":
+            print("Quitting game...")
+            return
+
+        if len(guess) != settings.length:
+            status_msg = f"Error: Guess must be {settings.length} letters."
             continue
         
-        if guess not in valid_guesses:
-            print("Not a valid word!")
-            continue
+        if settings.difficulty == "hard" and guesses:
+            last_guess, last_pattern = guesses[-1]
+            is_valid, error_list = is_hard_mode_compliant(guess, last_guess, last_pattern)
+           
+            if not is_valid:
+                status_msg = "Hard Mode Rules:\n   • " + "\n   • ".join(error_list)
+                continue
+    
+        if settings.mode == "evil":
+            pattern, word_pool = get_evil_outcome(guess, word_pool)
+        else:
+            pattern = match_pattern(guess, secret_word)
         
-        pattern, word_pool = get_best_outcome(guess, word_pool)
-        
-        if pattern == "22222":
-            print(f"You won in {turns + 1} turns!")
+        keyboard = get_updated_keyboard(keyboard, guess, pattern)
+        guesses.append((guess, pattern))
+    
+        if pattern == "2" * settings.length:
+            won = True
             break
-        
-        print(f"Result: {pattern}")
-        print(f"Remaining possibilities: {len(word_pool)}")
-        
-        turns += 1
-    else:
-        final_answer = random.choice(word_pool)
-        print(f"\nGame over. You ran out of turns.")
-        print(f"The word I 'totally' had in mind was: {final_answer}")
-
+    
+    print_result(won, secret_word, word_pool, guesses, settings)
+    
+    
 def main():
-    args = parse_args()
-    mode = args.mode
+    try:
+        args = parse_args()
+        settings = GameSettings(length=args.length, mode=args.mode, difficulty=args.difficulty, guesses=args.guesses)
+        
+        word_pool = load_words(settings.length)
+        
+        if not word_pool:
+            print("Empty word pool. Exiting.")
+            sys.exit(1)
+        
+        run_game(settings)
+    except KeyboardInterrupt as e:
+        print(e)
+        try:
+            exit(0)
+        except SystemExit:
+            pass
     
-    if not mode:
-        print("--- WELCOME TO EVIL WORDLE ---")
-        print("1. Easy (Static Word)")
-        print("2. Normal (Evil)")
-        print("3. Impossible (Max pain)")
-        choice = input("Select difficulty (1-3): ").strip()
-    
-    run_game(mode)
         
 
 if __name__ == "__main__":
