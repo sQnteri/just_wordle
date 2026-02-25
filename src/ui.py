@@ -1,10 +1,33 @@
-from utils import clear_screen
+from src.utils import clear_screen
 
-# ANSI Background Colors
-GREEN = '\033[42m\033[30m'  # Black text on Green bg
-YELLOW = '\033[43m\033[30m' # Black text on Yellow bg
-GRAY = '\033[100m\033[37m'  # White text on Gray bg
-RESET = '\033[0m'           # Back to normal
+# UI Constants
+RESET = "\033[0m"
+DIM   = "\033[2m"
+
+# Keyboard Colors (Text only, Black background)
+K_GREEN  = "\033[32m"
+K_YELLOW = "\033[33m"
+K_ABSENT = "\033[2;37m" # Dim + White/Gray text
+
+# Board Colors (Background blocks with Black text)
+B_GREEN  = "\033[30;42m" # Black text (30) on Green bg (42)
+B_YELLOW = "\033[30;43m" # Black text (30) on Yellow bg (43)
+B_GRAY   = "\033[30;47m" # Black text (30) on Gray bg (47)
+B_EMPTY  = "\033[30;100m" # Black text on Dark Gray bg (for empty slots)
+
+def print_main_menu(total_width):
+    clear_screen()
+    print("\n" * 2)
+    print("=" * total_width)
+    print("JUST WORDLE".center(total_width))
+    print("=" * total_width)
+    print("\n")
+    print("1. PLAY GAME".center(total_width))
+    print("2. SETTINGS".center(total_width))
+    print("3. STATISTICS".center(total_width))
+    print("4. EXIT".center(total_width))
+    print("\n")
+    print("=" * total_width)
 
 def format_guess(guess, pattern):
     formatted_chars = []
@@ -13,11 +36,11 @@ def format_guess(guess, pattern):
         p_val = pattern[i]
         
         if p_val == "2":
-            color = GREEN
+            color = B_GREEN
         elif p_val == "1":
-            color = YELLOW
+            color = B_YELLOW
         else:
-            color = GRAY
+            color = B_GRAY
             
         formatted_chars.append(f"{color} {char} {RESET}")
     
@@ -30,7 +53,7 @@ def print_header(settings, total_width):
     print(f"JUST WORDLE: {settings.mode.upper()}".center(total_width))
     print(f"{settings.length} Letters | {settings.difficulty.upper()}".center(total_width))
     print("=" * total_width)
-    print("(Type 'QUIT' to exit)".center(total_width))
+    print("(Type '!quit' to exit)".center(total_width))
     print("\n")
     
 def print_board(guesses, settings, keyboard, status_msg):
@@ -48,7 +71,7 @@ def print_board(guesses, settings, keyboard, status_msg):
     remaining_attempts = settings.guesses - len(guesses)
     
     for _ in range(remaining_attempts):
-        empty_slot = f"{GRAY}   {RESET}"
+        empty_slot = f"{B_GRAY}   {RESET}"
         empty_row = " ".join([empty_slot] * settings.length)
         print(f"\n  {empty_row}{RESET}")
     
@@ -57,9 +80,9 @@ def print_board(guesses, settings, keyboard, status_msg):
     if status_msg:
         print(f"{status_msg}{RESET}".center(total_width))
     
-def print_result(won, secret_word, word_pool, guesses, settings):
+def print_result(won, secret_word, word_pool, guesses, settings, keyboard, status_message):
     # 1. Final UI Refresh
-    print_board(guesses, settings)
+    print_board(guesses, settings, keyboard, status_message)
     
     # 2. Resolve the "Actual" Word
     if settings.mode == "evil":
@@ -76,11 +99,11 @@ def print_result(won, secret_word, word_pool, guesses, settings):
 
     # 3. Display Messages
     if won:
-        print(f"✨ {GREEN} CONGRATULATIONS! {RESET} ✨")
-        print(f"You found the word: {GREEN}{final_word}{RESET}")
+        print(f"✨ {K_GREEN} CONGRATULATIONS! {RESET} ✨")
+        print(f"You found the word: {K_GREEN}{final_word}{RESET}")
     else:
-        print(f"💀 {GRAY} GAME OVER {RESET} 💀")
-        print(f"The word was: {GREEN}{final_word}{RESET}")
+        print(f"💀 {K_YELLOW} GAME OVER {RESET} 💀")
+        print(f"The word was: {K_GREEN}{final_word}{RESET}")
         
 def print_keyboard(keyboard, total_width):
     rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"]
@@ -92,9 +115,9 @@ def print_keyboard(keyboard, total_width):
         for char in row_str:
             status = keyboard.get(char, 0)
             color = RESET
-            if status == 3: color = GREEN
-            elif status == 2: color = YELLOW
-            elif status == 1: color = GRAY
+            if status == 3: color = K_GREEN
+            elif status == 2: color = K_YELLOW
+            elif status == 1: color = K_ABSENT
             
             formatted_letters.append(f"{color}{char}{RESET}")
         

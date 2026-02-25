@@ -1,7 +1,7 @@
 import urllib.request
 import os
 
-# Using the 20k list which is much more diverse in lengths
+
 URL = "https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt"
 
 def build_data():
