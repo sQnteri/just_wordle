@@ -4,7 +4,7 @@ A terminal-based Wordle clone with some extra customization options.
 ## Features
 By default, includes 5-, 6-, and 7-letter Wordle. More word lengths can be added by simply adding solution files following this naming convention: "solutions_N.txt" for N-letter words.
 
-**Two game modes: normal and evil.** Normal mode follows the same rules as the official game. Evil mode comes with a twist: the engine is cheating! Instead of picking a word at the start of the game and sticking to it, it evaluates its remaining possibilities after each guess and returns the color pattern that keeps the most words still in play — with some weighted randomness to keep the gameplay fun.
+**Two game modes: normal and evil.** Normal mode follows the same rules as the official game. Evil mode comes with a twist: the engine is cheating! Instead of picking a word at the start of the game and sticking to it, it evaluates its remaining possibilities after each guess and returns the color pattern that keeps the most words still in play - with some weighted randomness to keep the gameplay fun.
 
 **Two difficulty settings: normal and hard.** Normal difficulty is standard Wordle. Hard mode adds another twist: you can only make guesses that are consistent with the feedback from your previous guesses. For example, if you guessed "horse" and the H was green, all subsequent guesses must start with H.
 
