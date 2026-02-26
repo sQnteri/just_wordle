@@ -1,58 +1,29 @@
-import argparse
-from src.engine import run_game
+import sys
+from src.engine import run_game, settings_menu
 from src.config import GameSettings
+from src.ui import print_main_menu, print_settings_menu
+from src import constants
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Evil Wordle")
-    
-    parser.add_argument(
-        "-l", "--length",
-        type=int,
-        default=5,
-        choices=[5, 6, 7],
-        help="Number of letters in the word (default: 5)"
-    )
-    
-    parser.add_argument(
-        "-m", "--mode",
-        type=str,
-        default="normal",
-        choices=["normal", "evil", "impossible"],
-        help="Game difficulty (default: normal)"
-    )
-    
-    parser.add_argument(
-        "-d", "--difficulty",
-        type=str,
-        default="normal",
-        choices=["normal", "hard"],
-        help="Game rules (default: normal)"
-    )
-    
-    parser.add_argument(
-        "-g", "--guesses",
-        type=int,
-        default=6,
-        choices=[i for i in range(1, 100)],
-        help="Number of guesses 1-100 (default: 6)"
-    )
-    
-    return parser.parse_args()
-
-   
 def main():
     try:
-        args = parse_args()
-        settings = GameSettings(length=args.length, mode=args.mode, difficulty=args.difficulty, guesses=args.guesses)
+        settings = GameSettings.load()
+    except FileNotFoundError as e:
+        print(f"\n[FATAL ERROR]: {e}")
+        sys.exit(1)
+    
+    while True:
+        print_main_menu(constants.MENU_WIDTH)
+        choice = input(" > ").strip()
         
-        run_game(settings)
-    except KeyboardInterrupt as e:
-        print(e)
-        try:
-            exit(0)
-        except SystemExit:
-            pass
+        if choice == '1':
+            run_game(settings)
+        elif choice == '2':
+            settings_menu(settings)
+        elif choice == '3':
+            print("Stats coming soon...")
+        elif choice == '4':
+            break
     
         
 

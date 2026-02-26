@@ -1,19 +1,7 @@
+import os
 from src.utils import clear_screen
+from src import constants
 
-# UI Constants
-RESET = "\033[0m"
-DIM   = "\033[2m"
-
-# Keyboard Colors (Text only, Black background)
-K_GREEN  = "\033[32m"
-K_YELLOW = "\033[33m"
-K_ABSENT = "\033[2;37m" # Dim + White/Gray text
-
-# Board Colors (Background blocks with Black text)
-B_GREEN  = "\033[30;42m" # Black text (30) on Green bg (42)
-B_YELLOW = "\033[30;43m" # Black text (30) on Yellow bg (43)
-B_GRAY   = "\033[30;47m" # Black text (30) on Gray bg (47)
-B_EMPTY  = "\033[30;100m" # Black text on Dark Gray bg (for empty slots)
 
 def print_main_menu(total_width):
     clear_screen()
@@ -28,6 +16,41 @@ def print_main_menu(total_width):
     print("4. EXIT".center(total_width))
     print("\n")
     print("=" * total_width)
+    
+def print_settings_menu(settings):
+    clear_screen()
+    print("=== JUST WORDLE SETTINGS ===")
+    print("Use keys to toggle options\n")
+    
+    # 1. Lengths
+    print(get_highlighted_row("(L) Word Length", settings.available_lengths, settings.length), "\n")
+    
+    # 2. Modes
+    print(get_highlighted_row("(M) Mode", ["normal", "evil"], settings.mode), "\n")
+    
+    #3. Difficulty
+    print(get_highlighted_row("(D) Diff", ["normal", "hard"], settings.difficulty), "\n")
+    
+    #4. Guesses
+    available_guesses_visual = ["inf" if x == 0 else x for x in settings.available_guesses]
+    guesses_visual = "inf" if settings.guesses == 0 else settings.guesses
+    print(get_highlighted_row("(G) Max Guesses", available_guesses_visual, guesses_visual), "\n")
+    
+    print("\n" + "-" * 30)
+    print("(R) Restore defaults\n(S) Save and quit: Save changes permanently\n(Q) Quit: Save settings only for current session")
+    
+def get_highlighted_row(label, options, current_value):
+    """
+    Example: Word Length: [ 5 ] [ 6 ] [ 7 ]
+    (if 5 is active, [ 5 ] will be green)
+    """
+    row_str = f"{label:16}: "
+    for opt in options:
+        if str(opt).lower() == str(current_value).lower():
+            row_str += f"{constants.K_GREEN} [ {opt} ] {constants.RESET} "
+        else:
+            row_str += f"  {opt}   "
+    return row_str
 
 def format_guess(guess, pattern):
     formatted_chars = []
@@ -36,13 +59,13 @@ def format_guess(guess, pattern):
         p_val = pattern[i]
         
         if p_val == "2":
-            color = B_GREEN
+            color = constants.B_GREEN
         elif p_val == "1":
-            color = B_YELLOW
+            color = constants.B_YELLOW
         else:
-            color = B_GRAY
+            color = constants.B_WRONG
             
-        formatted_chars.append(f"{color} {char} {RESET}")
+        formatted_chars.append(f"{color} {char} {constants.RESET}")
     
     return " ".join(formatted_chars)
 
@@ -53,7 +76,7 @@ def print_header(settings, total_width):
     print(f"JUST WORDLE: {settings.mode.upper()}".center(total_width))
     print(f"{settings.length} Letters | {settings.difficulty.upper()}".center(total_width))
     print("=" * total_width)
-    print("(Type '!quit' to exit)".center(total_width))
+    print("(Type 'q' to exit)".center(total_width))
     print("\n")
     
 def print_board(guesses, settings, keyboard, status_msg):
@@ -66,19 +89,32 @@ def print_board(guesses, settings, keyboard, status_msg):
     
     for word, pattern in guesses:
         row = format_guess(word, pattern)
-        print(f"\n  {row}{RESET}")
-        
-    remaining_attempts = settings.guesses - len(guesses)
+        print(f"\n  {row}{constants.RESET}")
     
-    for _ in range(remaining_attempts):
-        empty_slot = f"{B_GRAY}   {RESET}"
-        empty_row = " ".join([empty_slot] * settings.length)
-        print(f"\n  {empty_row}{RESET}")
+    total_guesses = float("inf") if settings.guesses == 0 else settings.guesses
+    
+    remaining_attempts = 0
+    
+    # 0 represents infinite mode
+    if settings.guesses != 0:
+        remaining_attempts = total_guesses - len(guesses)
+    
+    # number of static lines + 2 lines per guess (newlines between them)
+    if (15 + (2 * total_guesses) <= os.get_terminal_size().lines):
+         print_empty_rows(settings, remaining_attempts)
+    
+    
     
     print("\n" + ("=" * total_width))
     print_keyboard(keyboard, total_width)
     if status_msg:
-        print(f"{status_msg}{RESET}".center(total_width))
+        print(f"{status_msg}{constants.RESET}".center(total_width))
+
+def print_empty_rows(settings, remaining_attempts):
+    for _ in range(remaining_attempts):
+        empty_slot = f"{constants.B_GRAY}   {constants.RESET}"
+        empty_row = " ".join([empty_slot] * settings.length)
+        print(f"\n  {empty_row}{constants.RESET}")
     
 def print_result(won, secret_word, word_pool, guesses, settings, keyboard, status_message):
     # 1. Final UI Refresh
@@ -99,11 +135,12 @@ def print_result(won, secret_word, word_pool, guesses, settings, keyboard, statu
 
     # 3. Display Messages
     if won:
-        print(f"✨ {K_GREEN} CONGRATULATIONS! {RESET} ✨")
-        print(f"You found the word: {K_GREEN}{final_word}{RESET}")
+        print(f"✨ {constants.K_GREEN} CONGRATULATIONS! {constants.RESET} ✨")
+        print(f"You found the word: {constants.K_GREEN}{final_word}{constants.RESET}")
     else:
-        print(f"💀 {K_YELLOW} GAME OVER {RESET} 💀")
-        print(f"The word was: {K_GREEN}{final_word}{RESET}")
+        print(f"💀 {constants.K_YELLOW} GAME OVER {constants.RESET} 💀")
+        print(f"The word was: {constants.K_GREEN}{final_word}{constants.RESET}")
+    input("Press Enter to go back to main menu")
         
 def print_keyboard(keyboard, total_width):
     rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"]
@@ -114,12 +151,12 @@ def print_keyboard(keyboard, total_width):
         formatted_letters = []
         for char in row_str:
             status = keyboard.get(char, 0)
-            color = RESET
-            if status == 3: color = K_GREEN
-            elif status == 2: color = K_YELLOW
-            elif status == 1: color = K_ABSENT
+            color = constants.RESET
+            if status == 3: color = constants.K_GREEN
+            elif status == 2: color = constants.K_YELLOW
+            elif status == 1: color = constants.K_ABSENT
             
-            formatted_letters.append(f"{color}{char}{RESET}")
+            formatted_letters.append(f"{color}{char}{constants.RESET}")
         
         row_content = " ".join(formatted_letters)
         

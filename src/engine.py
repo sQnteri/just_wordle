@@ -1,11 +1,36 @@
 from src.logic import match_pattern, get_evil_outcome, is_hard_mode_compliant, get_updated_keyboard
-from src.ui import print_board, print_result
-from src.data_manager import load_words
+from src.ui import print_board, print_result, print_settings_menu
+from src.data_manager import load_words, load_allowed_words
+
+def settings_menu(settings):
+    while True:
+        print_settings_menu(settings)
+        
+        choice = input("\nSelect an option: ").strip().upper()
+        
+        if choice == 'L':
+            settings.toggle_length()
+        elif choice == 'M':
+            settings.toggle_mode()
+        elif choice == 'D':
+            settings.toggle_difficulty()
+        elif choice == 'G':
+            settings.toggle_guesses()
+        elif choice == 'R':
+            settings.restore_defaults()
+        elif choice == 'S':
+            settings.save()
+            return
+        elif choice == 'Q':
+            return
+            
 
 def run_game(settings):
     
     word_pool = load_words(settings.length)
-    if not word_pool:
+    allowed_words = load_allowed_words()
+    
+    if not word_pool or not allowed_words:
         print("Could not load words. Check your data folder.")
         return
     
@@ -16,7 +41,7 @@ def run_game(settings):
         
     guesses = []
     won = False
-    max_turns = settings.guesses
+    max_turns = float("inf") if settings.guesses == 0 else settings.guesses
     keyboard = {l: 0 for l in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"}
     status_msg = "" # To hold error messages between refreshes
     
@@ -25,14 +50,19 @@ def run_game(settings):
         status_msg = "" # Reset message after displaying
         
         turn_num = len(guesses) + 1
-        guess = input(f"Guess {turn_num}/{max_turns}: ").strip().upper()
         
-        if guess == "!QUIT":
-            print("Quitting game...")
+        input_prompt = f"Guess {turn_num}: " if max_turns == float("inf") else f"Guess {turn_num}/{max_turns}: "
+        guess = input(input_prompt).strip().upper()
+        
+        if guess == "Q":
             return
 
         if len(guess) != settings.length:
             status_msg = f"Error: Guess must be {settings.length} letters."
+            continue
+        
+        if guess not in allowed_words:
+            status_msg = f"Error: Guess must be a valid english word."
             continue
         
         if settings.difficulty == "hard" and guesses:
@@ -56,3 +86,4 @@ def run_game(settings):
             break
     
     print_result(won, secret_word, word_pool, guesses, settings, keyboard, status_msg)
+    

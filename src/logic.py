@@ -25,12 +25,6 @@ def match_pattern(guess, word):
    
     return "".join(pattern)
 
-def is_hard_mode_valid(current_guess, previous_guesses_and_patterns):
-    for prev_guess, prev_pattern in previous_guesses_and_patterns:
-        if match_pattern(prev_guess, current_guess) != prev_pattern:
-            return False
-    return True
-
 #adds each pattern to a bucket, then weightedly picks a pattern and returns it and the associated word list
 def get_evil_outcome(guess, word_pool):
     buckets = {}
@@ -74,12 +68,13 @@ def get_updated_keyboard(current_keyboard, guess, pattern):
     
     new_keyboard = current_keyboard.copy()
     
-    for i, char in enumerate(guess):
+    for i, char in enumerate(guess.upper()):
+        if char not in new_keyboard:
+            continue
+        
         new_status = int(pattern[i]) + 1
         
-        current_status = new_keyboard.get(char, 0)
-        
-        if new_status > current_status:
+        if new_status > new_keyboard[char]:
             new_keyboard[char] = new_status
         
     return new_keyboard
