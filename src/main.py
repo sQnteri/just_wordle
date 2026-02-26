@@ -1,9 +1,8 @@
 import sys
 from src.engine import run_game, settings_menu
 from src.config import GameSettings
-from src.ui import print_main_menu, print_settings_menu
+from src.ui import print_main_menu, clear_screen
 from src import constants
-from src.utils import clear_screen
 
 
 def main():

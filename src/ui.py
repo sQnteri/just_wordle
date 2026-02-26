@@ -1,7 +1,9 @@
 import os
-from src.utils import clear_screen
 from src import constants
 
+
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def print_main_menu(total_width):
     clear_screen()

@@ -1,5 +1,4 @@
 import pytest
-import random
 from src.logic import match_pattern, get_evil_outcome, is_hard_mode_compliant, get_updated_keyboard
 
 @pytest.mark.parametrize("guess, secret, expected", [
