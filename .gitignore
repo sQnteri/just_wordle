@@ -5,9 +5,10 @@ env/
 bin/
 lib/
 
+
 # Python cache
-__pycache__/
-*.pyc
+**/__pycache__/
+**/*.pyc
 
 # Distribution / Build
 dist/
@@ -16,4 +17,11 @@ build/
 
 # Data
 data/
+
+# User settings
+settings.json
+
+.python-version
+.vscode/
+
 
