@@ -3,6 +3,7 @@ from src.engine import run_game, settings_menu
 from src.config import GameSettings
 from src.ui import print_main_menu, print_settings_menu
 from src import constants
+from src.utils import clear_screen
 
 
 def main():
@@ -21,8 +22,7 @@ def main():
         elif choice == '2':
             settings_menu(settings)
         elif choice == '3':
-            print("Stats coming soon...")
-        elif choice == '4':
+            clear_screen()
             break
     
         

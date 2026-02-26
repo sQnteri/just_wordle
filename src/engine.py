@@ -61,6 +61,10 @@ def run_game(settings):
             status_msg = f"Error: Guess must be {settings.length} letters."
             continue
         
+        if guess in [g for g, p in guesses]:
+            status_msg = f"Error: You already guessed this word."
+            continue
+        
         if guess not in allowed_words:
             status_msg = f"Error: Guess must be a valid english word."
             continue

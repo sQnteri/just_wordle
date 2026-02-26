@@ -19,6 +19,7 @@ include = ["src*"]
 
 [project.scripts]
 wordle = "src.main:main"
+setup = "src.data_prep:build_data"
 
 [tool.uv]
 package = true

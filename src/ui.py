@@ -12,8 +12,7 @@ def print_main_menu(total_width):
     print("\n")
     print("1. PLAY GAME".center(total_width))
     print("2. SETTINGS".center(total_width))
-    print("3. STATISTICS".center(total_width))
-    print("4. EXIT".center(total_width))
+    print("3. EXIT".center(total_width))
     print("\n")
     print("=" * total_width)
     
